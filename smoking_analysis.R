@@ -1,33 +1,73 @@
-# Smoking research statistical analysis
-# Dataset: smoking_data.csv.csv (n = 500)
-# Tasks covered in code: 1) Descriptive, 2) Exploratory, 3) Chi-square, 4) Logistic regression
 
-# Section 0: Setup
-setwd("C:/Users/EXCALIBUR/Documents/0-----------------DERS-KİTAPLIK/SOFTWARES/R/smoking_research")
-rm(list = ls())
+# Effect of Smoking status on Lung Cancer and MI
 
-# Section 1: Data import and cleaning
-dataframe <- read.csv("smoking_data.csv.csv", stringsAsFactors = FALSE)
+# Dataset: smoking_data.csv (n = 500) 
+# 3 columns are independent variable, 2 columns are dependent variable, all categorical except the age.
 
-str(dataframe)
+
+# Tasks covered for analysis: 
+#                            1) Descriptive
+#                            2) Exploratory
+#                            3) Chi-square
+#                            4) Logistic regression
+
+
+
+
+
+
+# Section 1: Data import and correction_________________________________________
+
+
+rm(list = ls()) # Remove previous variables for a clean start
+
+
+# Don't automatically convert text columns into categorical factors
+dataframe <- read.csv("smoking_data.csv", stringsAsFactors = FALSE)  
+
+
+
+str(dataframe) # prints summary
+
+
+# Check the missing values, and print them 
 cat("Rows:", nrow(dataframe), "| Columns:", ncol(dataframe), "\n")
 cat("\nMissing values per column:\n")
 print(colSums(is.na(dataframe)))
 
-# Data quality fix: two rows use text "No" instead of numeric code 2
-# User-provided coding is: 1 = No, 2 = Yes for lung_cancer
-if ("No" %in% dataframe$lung_cancer) {
+
+
+# Required fix: Two rows use text "No" instead of numeric code "2" in lung_cancer
+# (1 = No, 2 = Yes)
+
+if ("No" %in% dataframe$lung_cancer)  # runs the code inside, if the condition is True. It checks the "No" values
+  
+  {
   dataframe$lung_cancer[dataframe$lung_cancer == "No"] <- "1"
 }
 dataframe$lung_cancer <- as.integer(dataframe$lung_cancer)
 
-# Recode variables using the requested coding map
+
+
+
+# Section 2: Decoding of categorical variables__________________________________
+
+
+# In contrast of Python, R wants categorical groups given as STRINGS, not the encoded numbers (1,2,3 etc)
+
+# When a column contains integers, R treats those as "continuous" quantities by default.
+
+# Therefore, categorical variables should not be encoded. We can decode them by using "factor()"
+
+
+
 # smoking_ever: 1 = Never, 2 = Ever
 dataframe$smoking_ever <- factor(
   dataframe$smoking_ever,
   levels = c(1, 2),
   labels = c("Never", "Ever")
 )
+
 
 # smoking_duration: 1 = Never, 2 = <1 year, 3 = 2-5 years, 4 = >5 years
 dataframe$smoking_duration <- factor(
@@ -37,15 +77,22 @@ dataframe$smoking_duration <- factor(
   ordered = TRUE
 )
 
+
 # lung_cancer: 1 = No, 2 = Yes
-# mi: 1 = No, 2 = Yes
 dataframe$lung_cancer <- factor(dataframe$lung_cancer, levels = c(1, 2), labels = c("No", "Yes"))
+
+
+# mi: 1 = No, 2 = Yes
 dataframe$mi <- factor(dataframe$mi, levels = c(1, 2), labels = c("No", "Yes"))
+
 
 str(dataframe)
 
-# Section 2: Task 1 descriptive statistics
-cat("\nTask 1: Descriptive statistics\n")
+
+
+
+# Section 3: descriptive statistics_____________________________________________
+cat("\nDescriptive statistics\n")
 
 cat("\nAge summary\n")
 cat("Mean   :", round(mean(dataframe$age), 1), "\n")
@@ -130,7 +177,10 @@ dev.off()
 
 cat("Task 1 plots saved to working directory.\n")
 
-# Section 3: Task 2 exploratory associations
+
+
+
+# Section 4: exploratory associations___________________________________________
 cat("\nTask 2: Exploratory associations\n")
 
 # margin = 1 gives row percentages (within each smoking group)
@@ -205,7 +255,10 @@ dev.off()
 
 cat("Task 2 plots saved to working directory.\n")
 
-# Section 4: Task 3 hypothesis testing (chi-square)
+
+
+
+# Section 5: hypothesis testing with chi-square_________________________________
 cat("\nTask 3: Hypothesis testing\n")
 
 run_chi_square_test <- function(first_variable, second_variable, relationship_label) {
@@ -249,7 +302,10 @@ run_chi_square_test(dataframe$smoking_ever, dataframe$lung_cancer, "Smoking Ever
 run_chi_square_test(dataframe$smoking_duration, dataframe$mi, "Smoking Duration x MI")
 run_chi_square_test(dataframe$smoking_duration, dataframe$lung_cancer, "Smoking Duration x Lung Cancer")
 
-# Section 5: Task 4 logistic regression
+
+
+
+# Section 6: logistic regression________________________________________________
 # family = binomial specifies logistic regression for binary outcomes.
 cat("\nTask 4: Logistic regression\n")
 
