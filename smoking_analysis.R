@@ -22,7 +22,7 @@
 rm(list = ls()) # Remove previous variables for a clean start
 
 
-# Don't automatically convert text columns into categorical factors
+# Load dataset with integers as a dataframe
 dataframe <- read.csv("smoking_data.csv", stringsAsFactors = FALSE)  
 
 
@@ -50,6 +50,7 @@ dataframe$lung_cancer <- as.integer(dataframe$lung_cancer)
 
 
 
+
 # Section 2: Decoding of categorical variables__________________________________
 
 
@@ -69,11 +70,16 @@ dataframe$smoking_ever <- factor(
 )
 
 
+# Categorical Factors are automatically handled correctly by statistical tests and regression models.
+
+
+
+
 # smoking_duration: 1 = Never, 2 = <1 year, 3 = 2-5 years, 4 = >5 years
 dataframe$smoking_duration <- factor(
   dataframe$smoking_duration,
   levels = c(1, 2, 3, 4),
-  labels = c("Never", "<1 yr", "2-5 yrs", ">5 yrs"),
+  labels = c("Never", "LessThan1yr", "2to5yrs", "MoreThan5yrs"),
   ordered = TRUE
 )
 
@@ -91,51 +97,75 @@ str(dataframe)
 
 
 
+
 # Section 3: descriptive statistics_____________________________________________
+
 cat("\nDescriptive statistics\n")
 
-cat("\nAge summary\n")
-cat("Mean   :", round(mean(dataframe$age), 1), "\n")
-cat("Median :", median(dataframe$age), "\n")
-cat("SD     :", round(sd(dataframe$age), 2), "\n")
+
+# 3.1) Age variable
+
+cat("\nAge summary statistics:\n")
+cat("Mean   :", round(mean(dataframe$age), 1))  # round to display less decimals
+cat("Median :", median(dataframe$age))
+cat("SD     :", round(sd(dataframe$age), 2))
 cat("Range  :", range(dataframe$age), "\n")
 
-print_frequency_table <- function(variable_values, variable_label) {
-  cat("\n", variable_label, "\n", sep = "")
-  count_table <- table(variable_values)
-  percent_table <- round(prop.table(count_table) * 100, 1)
-  print(rbind(Count = count_table, Percent = percent_table))
-}
 
-print_frequency_table(dataframe$smoking_ever, "Smoking Ever")
-print_frequency_table(dataframe$smoking_duration, "Smoking Duration")
-print_frequency_table(dataframe$lung_cancer, "Lung Cancer")
-print_frequency_table(dataframe$mi, "Myocardial Infarction (MI)")
 
-cat("\nCross-tab: Smoking Ever x MI\n")
+
+
+# 3.2) Cross-tabs (Contingency tables)
+# Frequency of a variable, according to output
+
+cat("\nCross-tab: Smoking Ever & MI\n")
 print(table(Smoking = dataframe$smoking_ever, MI = dataframe$mi))
 
-cat("\nCross-tab: Smoking Ever x Lung Cancer\n")
+cat("\nCross-tab: Smoking Ever & Lung Cancer\n")
 print(table(Smoking = dataframe$smoking_ever, LungCancer = dataframe$lung_cancer))
 
-cat("\nCross-tab: Smoking Duration x MI\n")
+cat("\nCross-tab: Smoking Duration & MI\n")
 print(table(Duration = dataframe$smoking_duration, MI = dataframe$mi))
 
-cat("\nCross-tab: Smoking Duration x Lung Cancer\n")
+cat("\nCross-tab: Smoking Duration & Lung Cancer\n")
 print(table(Duration = dataframe$smoking_duration, LungCancer = dataframe$lung_cancer))
 
-png("task1_age_distribution.png", width = 700, height = 500)
-hist(
-  dataframe$age,
-  main = "Age Distribution of Patients",
+
+
+
+# 3.3) Plotting the Histogram 
+
+hist(                                                          
+  dataframe$age,                              # the variable in dataframe
+  main = "Age Distribution of Patients",      # title
+  xlab = "Age (years)",                       # x-axis label
+  col = "steelblue",
+  border = "white",
+  breaks = 30                                 # number of bars
+)
+
+
+
+# Save plot as an image in the directory
+
+png("age_distribution.png", width = 700, height = 500)   # save the plot below, as PNG
+hist(                                                          
+  dataframe$age,                                               
+  main = "Age Distribution of Patients",                       
   xlab = "Age (years)",
   col = "steelblue",
   border = "white",
-  breaks = 15
+  breaks = 30
 )
-dev.off()
+dev.off()     # save and close
 
-png("task1_smoking_ever.png", width = 600, height = 500)
+
+
+# 3.4) Bar graphs
+
+
+# Counts of smoking status
+png("smoking_ever.png", width = 700, height = 500)
 barplot(
   table(dataframe$smoking_ever),
   main = "Patients by Smoking Status",
@@ -145,17 +175,21 @@ barplot(
 )
 dev.off()
 
-png("task1_smoking_duration.png", width = 700, height = 500)
+
+# Counts of smoking duration
+png("smoking_duration.png", width = 700, height = 500)
 barplot(
   table(dataframe$smoking_duration),
   main = "Patients by Smoking Duration",
   xlab = "Duration",
   ylab = "Count",
-  col = c("grey70", "skyblue", "steelblue", "navy")
+  col = c("steelblue", "lightcoral", "indianred", "darkred")
 )
 dev.off()
 
-png("task1_lung_cancer.png", width = 600, height = 500)
+
+# Counts of lung cancer cases
+png("lung_cancer.png", width = 700, height = 500)
 barplot(
   table(dataframe$lung_cancer),
   main = "Lung Cancer Cases",
@@ -165,6 +199,8 @@ barplot(
 )
 dev.off()
 
+
+# Counts of MI cases
 png("task1_mi.png", width = 600, height = 500)
 barplot(
   table(dataframe$mi),
@@ -175,35 +211,40 @@ barplot(
 )
 dev.off()
 
-cat("Task 1 plots saved to working directory.\n")
 
 
 
 
-# Section 4: exploratory associations___________________________________________
-cat("\nTask 2: Exploratory associations\n")
 
-# margin = 1 gives row percentages (within each smoking group)
-mi_rate_by_smoking_status <- prop.table(table(dataframe$smoking_ever, dataframe$mi), margin = 1) * 100
+# Section 4: Exploration of associations________________________________________
+
+
+# 4.1) Cross-tabs with percentages 
+
+# Generate table variables to plot these cross-tabs
+
+
+mi_rate_by_smoking_status <- prop.table(        # convert to fractions between 0 and 1
+  table(dataframe$smoking_ever, dataframe$mi),  # get the counts
+  margin = 1                                    # divide by row totals
+) * 100     # convert them to percentages
+
+
 lung_cancer_rate_by_smoking_status <- prop.table(table(dataframe$smoking_ever, dataframe$lung_cancer), margin = 1) * 100
+
 mi_rate_by_smoking_duration <- prop.table(table(dataframe$smoking_duration, dataframe$mi), margin = 1) * 100
+
 lung_cancer_rate_by_smoking_duration <- prop.table(table(dataframe$smoking_duration, dataframe$lung_cancer), margin = 1) * 100
 
-cat("\nMI rate (%) by Smoking Ever\n")
-print(round(mi_rate_by_smoking_status, 1))
 
-cat("\nLung Cancer rate (%) by Smoking Ever\n")
-print(round(lung_cancer_rate_by_smoking_status, 1))
 
-cat("\nMI rate (%) by Smoking Duration\n")
-print(round(mi_rate_by_smoking_duration, 1))
+# 4.2) Plot cross-tabs as bar graphs
 
-cat("\nLung Cancer rate (%) by Smoking Duration\n")
-print(round(lung_cancer_rate_by_smoking_duration, 1))
 
-png("task2_mi_by_smoking_ever.png", width = 700, height = 500)
+# smokings status - MI
+png("mi_by_smoking_ever.png", width = 700, height = 500)
 barplot(
-  t(mi_rate_by_smoking_status),
+  t(mi_rate_by_smoking_status),             # transpose the table
   beside = TRUE,
   main = "MI Rate (%) by Smoking Status",
   xlab = "Smoking Status",
@@ -214,7 +255,9 @@ barplot(
 )
 dev.off()
 
-png("task2_lungcancer_by_smoking_ever.png", width = 700, height = 500)
+
+# smokings status - Lung Cancer
+png("lungcancer_by_smoking_ever.png", width = 700, height = 500)
 barplot(
   t(lung_cancer_rate_by_smoking_status),
   beside = TRUE,
@@ -227,7 +270,9 @@ barplot(
 )
 dev.off()
 
-png("task2_mi_by_smoking_duration.png", width = 800, height = 500)
+
+# smoking duration - MI 
+png("mi_by_smoking_duration.png", width = 800, height = 500)
 barplot(
   t(mi_rate_by_smoking_duration),
   beside = TRUE,
@@ -240,7 +285,9 @@ barplot(
 )
 dev.off()
 
-png("task2_lungcancer_by_smoking_duration.png", width = 800, height = 500)
+
+# smoking duration - Lung Cancer 
+png("lungcancer_by_smoking_duration.png", width = 800, height = 500)
 barplot(
   t(lung_cancer_rate_by_smoking_duration),
   beside = TRUE,
@@ -253,211 +300,273 @@ barplot(
 )
 dev.off()
 
-cat("Task 2 plots saved to working directory.\n")
 
 
 
 
-# Section 5: hypothesis testing with chi-square_________________________________
-cat("\nTask 3: Hypothesis testing\n")
 
-run_chi_square_test <- function(first_variable, second_variable, relationship_label) {
-  contingency_table <- table(first_variable, second_variable)
-  chi_square_result <- suppressWarnings(chisq.test(contingency_table))
+# Section 5: Hypothesis testing with chi-square_________________________________
+cat("\nHypothesis testing\n")
 
-  cat("\n", relationship_label, "\n", sep = "")
-  cat("H0: No association between variables\n")
-  cat("H1: There is an association\n")
-  cat(sprintf(
-    "chi2 = %.3f | df = %d | p = %.4f\n",
-    chi_square_result$statistic,
-    chi_square_result$parameter,
-    chi_square_result$p.value
-  ))
 
-  minimum_expected_count <- min(chi_square_result$expected)
+# Chi-Square is a one factor vs. one outcome test for categorical variables.
 
-  if (minimum_expected_count < 5) {
-    cat(
-      "Warning: min expected count =", round(minimum_expected_count, 2),
-      "-> using Fisher's Exact Test\n"
-    )
-    fisher_result <- fisher.test(contingency_table)
-    cat(sprintf("Fisher p = %.4f\n", fisher_result$p.value))
-    final_p_value <- fisher_result$p.value
-  } else {
-    cat("Assumption OK (min expected =", round(minimum_expected_count, 2), ")\n")
-    final_p_value <- chi_square_result$p.value
-  }
+# Note: Chi-square test assumes all expected counts in the table are >=5.
 
-  if (final_p_value < 0.05) {
-    cat("Decision: Significant (p < 0.05), reject H0\n")
-  } else {
-    cat("Decision: Not significant (p >= 0.05), fail to reject H0\n")
-  }
-}
-
-run_chi_square_test(dataframe$smoking_ever, dataframe$mi, "Smoking Ever x MI")
-run_chi_square_test(dataframe$smoking_ever, dataframe$lung_cancer, "Smoking Ever x Lung Cancer")
-run_chi_square_test(dataframe$smoking_duration, dataframe$mi, "Smoking Duration x MI")
-run_chi_square_test(dataframe$smoking_duration, dataframe$lung_cancer, "Smoking Duration x Lung Cancer")
+# If any are <5, the p-value may be unreliable. Consider using "fisher.test()" instead.
 
 
 
 
-# Section 6: logistic regression________________________________________________
-# family = binomial specifies logistic regression for binary outcomes.
+# Test 1: Smoking Ever x MI
+crosstab1 <- table(dataframe$smoking_ever, dataframe$mi)  # chi-square uses cross-tabs
+chi_result <- suppressWarnings(chisq.test(crosstab1))     # outputs an object containing the results
+
+cat("\nSmoking Ever x MI\n")
+cat("H0: No association | H1: Association exists\n")
+
+cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",            # printing the values by a formatting template
+            chi_result$statistic, chi_result$parameter, 
+            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+
+# Degrees of freedom (df): Defines which value of Chi-square is significant; selects which test distribution to use
+# df=(rows???1)??(columns???1)  from the cross-tab
+
+
+
+
+# Test 2: Smoking Ever x Lung Cancer
+crosstab2 <- table(dataframe$smoking_ever, dataframe$lung_cancer)
+chi_result <- suppressWarnings(chisq.test(crosstab2))
+cat("\nSmoking Ever x Lung Cancer\n")
+cat("H0: No association | H1: Association exists\n")
+cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
+            chi_result$statistic, chi_result$parameter, 
+            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+
+
+# Test 3: Smoking Duration x MI
+crosstab3 <- table(dataframe$smoking_duration, dataframe$mi)
+chi_result <- suppressWarnings(chisq.test(crosstab3))
+cat("\nSmoking Duration x MI\n")
+cat("H0: No association | H1: Association exists\n")
+cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
+            chi_result$statistic, chi_result$parameter, 
+            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+
+
+# Test 4: Smoking Duration x Lung Cancer
+crosstab4 <- table(dataframe$smoking_duration, dataframe$lung_cancer)
+chi_result <- suppressWarnings(chisq.test(crosstab4))
+cat("\nSmoking Duration x Lung Cancer\n")
+cat("H0: No association | H1: Association exists\n")
+cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
+            chi_result$statistic, chi_result$parameter, 
+            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+
+
+
+
+# Section 6: Logistic Regression ________________________________________________
+
 cat("\nTask 4: Logistic regression\n")
 
-dataframe$mi_binary <- ifelse(dataframe$mi == "Yes", 1, 0)
-dataframe$lung_cancer_binary <- ifelse(dataframe$lung_cancer == "Yes", 1, 0)
+# Scale age to 10-year units so each OR reflects a per-decade change
+dataframe$age_10 <- dataframe$age / 10
 
-print_logistic_results <- function(logistic_model, model_label) {
-  cat("\n", model_label, "\n", sep = "")
-  coefficient_summary <- summary(logistic_model)$coefficients
-  odds_ratio_values <- exp(coef(logistic_model))
-  confidence_interval_values <- exp(suppressMessages(confint(logistic_model)))
-  p_values <- coefficient_summary[, 4]
+# Unordered copy of smoking_duration with "Never" as reference level
+# ??? glm() will create one beta per level vs Never (interpretable ORs)
+# Original smoking_duration stays ordered for trend tests
+dataframe$smoking_duration_not_ordinal <- factor(dataframe$smoking_duration, ordered = FALSE)
+dataframe$smoking_duration_not_ordinal  <- relevel(dataframe$smoking_duration_not_ordinal, ref = "Never")
 
-  result_table <- data.frame(
-    OR = round(odds_ratio_values, 3),
-    CI_lower = round(confidence_interval_values[, 1], 3),
-    CI_upper = round(confidence_interval_values[, 2], 3),
-    p_value = round(p_values, 4)
-  )
 
-  print(result_table)
-}
 
-model_1_unadjusted_mi <- glm(mi_binary ~ smoking_ever, data = dataframe, family = binomial)
-model_2_unadjusted_lung_cancer <- glm(lung_cancer_binary ~ smoking_ever, data = dataframe, family = binomial)
-model_3_adjusted_mi <- glm(mi_binary ~ smoking_ever + age, data = dataframe, family = binomial)
-model_4_adjusted_lung_cancer <- glm(lung_cancer_binary ~ smoking_ever + age, data = dataframe, family = binomial)
-model_5_dose_response_mi <- glm(mi_binary ~ as.numeric(smoking_duration), data = dataframe, family = binomial)
-model_6_dose_response_lung_cancer <- glm(lung_cancer_binary ~ as.numeric(smoking_duration), data = dataframe, family = binomial)
 
-print_logistic_results(model_1_unadjusted_mi, "Model 1 - Unadjusted: Smoking Ever -> MI")
-print_logistic_results(model_2_unadjusted_lung_cancer, "Model 2 - Unadjusted: Smoking Ever -> Lung Cancer")
-print_logistic_results(model_3_adjusted_mi, "Model 3 - Age-adjusted: Smoking Ever + Age -> MI")
-print_logistic_results(model_4_adjusted_lung_cancer, "Model 4 - Age-adjusted: Smoking Ever + Age -> Lung Cancer")
-print_logistic_results(model_5_dose_response_mi, "Model 5 - Dose-response: Smoking Duration -> MI")
-print_logistic_results(model_6_dose_response_lung_cancer, "Model 6 - Dose-response: Smoking Duration -> Lung Cancer")
+# ?????? Single-factor models (unadjusted)
 
-cat("\nConfounding check (OR for Smoking Ever vs Never)\n")
-cat(sprintf(
-  "MI: Unadjusted OR = %.3f | Age-adjusted OR = %.3f\n",
-  exp(coef(model_1_unadjusted_mi)["smoking_everEver"]),
-  exp(coef(model_3_adjusted_mi)["smoking_everEver"])
-))
-cat(sprintf(
-  "Lung Cancer: Unadjusted OR = %.3f | Age-adjusted OR = %.3f\n",
-  exp(coef(model_2_unadjusted_lung_cancer)["smoking_everEver"]),
-  exp(coef(model_4_adjusted_lung_cancer)["smoking_everEver"])
-))
 
-create_odds_ratio_forest_plot <- function(
-  odds_ratio_values,
-  lower_confidence_values,
-  upper_confidence_values,
-  label_values,
-  plot_title,
-  output_filename
-) {
-  png(output_filename, width = 750, height = 450)
 
-  number_of_points <- length(odds_ratio_values)
-  x_axis_maximum <- max(upper_confidence_values, na.rm = TRUE) + 0.5
+# Model 1: Smoking Ever -> MI 
+# Binary predictor: Ever vs Never; single beta ??? single OR
+model_mi_smoking_ever <- glm(mi ~ smoking_ever, data = dataframe, family = binomial)
 
-  plot(
-    odds_ratio_values,
-    seq_len(number_of_points),
-    xlim = c(0, x_axis_maximum),
-    pch = 15,
-    cex = 1.5,
-    xlab = "Odds Ratio (95% CI)",
-    yaxt = "n",
-    ylab = "",
-    main = plot_title
-  )
+cat("\nModel 1: Smoking Ever -> MI\n")
+cat("OR for 'Ever' vs 'Never':",
+    round(exp(coef(model_mi_smoking_ever)["smoking_everEver"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_mi_smoking_ever))["smoking_everEver", ]), 3), "\n")
 
-  axis(2, at = seq_len(number_of_points), labels = label_values, las = 1)
-  arrows(
-    lower_confidence_values,
-    seq_len(number_of_points),
-    upper_confidence_values,
-    seq_len(number_of_points),
-    angle = 90,
-    code = 3,
-    length = 0.08
-  )
-  abline(v = 1, lty = 2, col = "red")
 
-  dev.off()
-}
 
-create_odds_ratio_forest_plot(
-  odds_ratio_values = c(
-    exp(coef(model_1_unadjusted_mi)["smoking_everEver"]),
-    exp(coef(model_3_adjusted_mi)["smoking_everEver"])
-  ),
-  lower_confidence_values = c(
-    exp(suppressMessages(confint(model_1_unadjusted_mi))["smoking_everEver", 1]),
-    exp(suppressMessages(confint(model_3_adjusted_mi))["smoking_everEver", 1])
-  ),
-  upper_confidence_values = c(
-    exp(suppressMessages(confint(model_1_unadjusted_mi))["smoking_everEver", 2]),
-    exp(suppressMessages(confint(model_3_adjusted_mi))["smoking_everEver", 2])
-  ),
-  label_values = c("Unadjusted", "Age-adjusted"),
-  plot_title = "OR for Smoking (Ever vs Never) on MI",
-  output_filename = "task4_OR_smoking_MI.png"
-)
+# Model 2: Smoking Ever -> Lung Cancer 
+model_lc_smoking_ever <- glm(lung_cancer ~ smoking_ever, data = dataframe, family = binomial)
 
-create_odds_ratio_forest_plot(
-  odds_ratio_values = c(
-    exp(coef(model_2_unadjusted_lung_cancer)["smoking_everEver"]),
-    exp(coef(model_4_adjusted_lung_cancer)["smoking_everEver"])
-  ),
-  lower_confidence_values = c(
-    exp(suppressMessages(confint(model_2_unadjusted_lung_cancer))["smoking_everEver", 1]),
-    exp(suppressMessages(confint(model_4_adjusted_lung_cancer))["smoking_everEver", 1])
-  ),
-  upper_confidence_values = c(
-    exp(suppressMessages(confint(model_2_unadjusted_lung_cancer))["smoking_everEver", 2]),
-    exp(suppressMessages(confint(model_4_adjusted_lung_cancer))["smoking_everEver", 2])
-  ),
-  label_values = c("Unadjusted", "Age-adjusted"),
-  plot_title = "OR for Smoking (Ever vs Never) on Lung Cancer",
-  output_filename = "task4_OR_smoking_LungCancer.png"
-)
+cat("\nModel 2: Smoking Ever -> Lung Cancer\n")
+cat("OR for 'Ever' vs 'Never':",
+    round(exp(coef(model_lc_smoking_ever)["smoking_everEver"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_lc_smoking_ever))["smoking_everEver", ]), 3), "\n")
 
-smoking_duration_levels <- levels(dataframe$smoking_duration)
-mi_rate_by_duration <- tapply(dataframe$mi_binary, dataframe$smoking_duration, mean) * 100
-lung_cancer_rate_by_duration <- tapply(dataframe$lung_cancer_binary, dataframe$smoking_duration, mean) * 100
 
-png("task4_doseresponse_MI.png", width = 700, height = 500)
-barplot(
-  mi_rate_by_duration,
-  names.arg = smoking_duration_levels,
-  main = "MI Rate (%) by Smoking Duration - Dose-response",
-  xlab = "Smoking Duration",
-  ylab = "MI Rate (%)",
-  col = "steelblue",
-  ylim = c(0, 100)
-)
-dev.off()
 
-png("task4_doseresponse_LungCancer.png", width = 700, height = 500)
-barplot(
-  lung_cancer_rate_by_duration,
-  names.arg = smoking_duration_levels,
-  main = "Lung Cancer Rate (%) by Smoking Duration - Dose-response",
-  xlab = "Smoking Duration",
-  ylab = "Lung Cancer Rate (%)",
-  col = "tomato",
-  ylim = c(0, 100)
-)
-dev.off()
+# Model 3: Smoking Duration -> MI 
 
-cat("Task 4 plots saved to working directory.\n")
-cat("\nAnalysis complete. All PNG plots saved to the working directory.\n")
+
+# 3a: Unordered factor ??? one OR per level vs Never
+model_mi_dur_cat <- glm(mi ~ smoking_duration_not_ordinal, data = dataframe, family = binomial)
+
+cat("\nModel 3a: Smoking Duration -> MI (categorical ORs vs Never)\n")
+
+# Build table, then strip the variable name prefix R adds to row names
+or_table <- round(exp(cbind(OR = coef(model_mi_dur_cat),
+                            suppressMessages(confint(model_mi_dur_cat)))), 3)
+rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
+print(or_table)
+
+
+# 3b: Ordered factor ??? .L coefficient = linear trend across ordered levels
+model_mi_dur_ord <- glm(mi ~ smoking_duration, data = dataframe, family = binomial)
+
+cat("\nModel 3b: Smoking Duration -> MI (linear trend / dose-response)\n")
+trend_mi_dur <- coef(summary(model_mi_dur_ord))["smoking_duration.L", ]
+cat("Linear trend OR:", round(exp(trend_mi_dur["Estimate"]), 3),
+    "| p-value:", formatC(trend_mi_dur["Pr(>|z|)"], format = "f", digits = 4), "\n")
+
+
+
+# Model 4: Smoking Duration -> Lung Cancer 
+
+# 4a: Unordered factor ??? one OR per level vs Never
+model_lc_dur_cat <- glm(lung_cancer ~ smoking_duration_not_ordinal, data = dataframe, family = binomial)
+
+cat("\nModel 4a: Smoking Duration -> Lung Cancer (categorical ORs vs Never)\n")
+or_table <- round(exp(cbind(OR = coef(model_lc_dur_cat),
+                            suppressMessages(confint(model_lc_dur_cat)))), 3)
+rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
+print(or_table)
+
+
+# 4b: Ordered factor ??? linear trend test
+model_lc_dur_ord <- glm(lung_cancer ~ smoking_duration, data = dataframe, family = binomial)
+
+cat("\nModel 4b: Smoking Duration -> Lung Cancer (linear trend / dose-response)\n")
+trend_lc_dur <- coef(summary(model_lc_dur_ord))["smoking_duration.L", ]
+cat("Linear trend OR:", round(exp(trend_lc_dur["Estimate"]), 3),
+    "| p-value:", formatC(trend_lc_dur["Pr(>|z|)"], format = "f", digits = 4), "\n")
+
+
+
+# Model 5: Age -> MI 
+# Continuous predictor; OR = multiplicative change in MI odds per 10 years
+model_mi_age <- glm(mi ~ age_10, data = dataframe, family = binomial)
+
+cat("\nModel 5: Age -> MI\n")
+cat("OR per 10-year increase:",
+    round(exp(coef(model_mi_age)["age_10"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_mi_age))["age_10", ]), 3), "\n")
+
+
+
+# Model 6: Age -> Lung Cancer 
+model_lc_age <- glm(lung_cancer ~ age_10, data = dataframe, family = binomial)
+
+cat("\nModel 6: Age -> Lung Cancer\n")
+cat("OR per 10-year increase:",
+    round(exp(coef(model_lc_age)["age_10"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_lc_age))["age_10", ]), 3), "\n")
+
+
+
+
+
+# ?????? Age-adjusted models ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+
+# Adding age_10 to isolate each predictor's independent effect
+
+
+
+# Model 7: Smoking Ever + Age -> MI 
+model_mi_ever_adj <- glm(mi ~ smoking_ever + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 7: Smoking Ever + Age -> MI (age-adjusted)\n")
+cat("OR for 'Ever' vs 'Never' (adj. for age):",
+    round(exp(coef(model_mi_ever_adj)["smoking_everEver"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_mi_ever_adj))["smoking_everEver", ]), 3), "\n")
+cat("OR per 10-year age increase (adj. for smoking):",
+    round(exp(coef(model_mi_ever_adj)["age_10"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_mi_ever_adj))["age_10", ]), 3), "\n")
+
+
+
+# Model 8: Smoking Ever + Age -> Lung Cancer 
+model_lc_ever_adj <- glm(lung_cancer ~ smoking_ever + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 8: Smoking Ever + Age -> Lung Cancer (age-adjusted)\n")
+cat("OR for 'Ever' vs 'Never' (adj. for age):",
+    round(exp(coef(model_lc_ever_adj)["smoking_everEver"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_lc_ever_adj))["smoking_everEver", ]), 3), "\n")
+cat("OR per 10-year age increase (adj. for smoking):",
+    round(exp(coef(model_lc_ever_adj)["age_10"]), 3),
+    "| 95% CI:",
+    round(exp(suppressMessages(confint(model_lc_ever_adj))["age_10", ]), 3), "\n")
+
+
+
+# Model 9: Smoking Duration + Age -> MI 
+
+
+# 9a: Unordered ??? per-level ORs vs Never, with age held constant
+model_mi_dur_adj_cat <- glm(mi ~ smoking_duration_not_ordinal + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 9a: Smoking Duration + Age -> MI (categorical ORs, age-adjusted)\n")
+or_table <- round(exp(cbind(OR = coef(model_mi_dur_adj_cat),
+                            suppressMessages(confint(model_mi_dur_adj_cat)))), 3)
+rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
+print(or_table)
+
+
+# 9b: Ordered ??? linear trend test with age held constant
+model_mi_dur_adj_ord <- glm(mi ~ smoking_duration + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 9b: Smoking Duration + Age -> MI (trend test, age-adjusted)\n")
+trend_mi_dur_adj <- coef(summary(model_mi_dur_adj_ord))["smoking_duration.L", ]
+cat("Linear trend OR:", round(exp(trend_mi_dur_adj["Estimate"]), 3),
+    "| p-value:", formatC(trend_mi_dur_adj["Pr(>|z|)"], format = "f", digits = 4), "\n")
+
+
+
+
+# Model 10: Smoking Duration + Age -> Lung Cancer
+
+
+# 10a: Unordered ??? per-level ORs vs Never, with age held constant
+model_lc_dur_adj_cat <- glm(lung_cancer ~ smoking_duration_not_ordinal + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 10a: Smoking Duration + Age -> Lung Cancer (categorical ORs, age-adjusted)\n")
+or_table <- round(exp(cbind(OR = coef(model_lc_dur_adj_cat),
+                            suppressMessages(confint(model_lc_dur_adj_cat)))), 3)
+rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
+print(or_table)
+
+
+# 10b: Ordered ??? linear trend test with age held constant
+model_lc_dur_adj_ord <- glm(lung_cancer ~ smoking_duration + age_10, data = dataframe, family = binomial)
+
+cat("\nModel 10b: Smoking Duration + Age -> Lung Cancer (trend test, age-adjusted)\n")
+trend_lc_dur_adj <- coef(summary(model_lc_dur_adj_ord))["smoking_duration.L", ]
+cat("Linear trend OR:", round(exp(trend_lc_dur_adj["Estimate"]), 3),
+    "| p-value:", formatC(trend_lc_dur_adj["Pr(>|z|)"], format = "f", digits = 4), "\n")
+
+
+
+cat("\nAnalysis complete.\n")
