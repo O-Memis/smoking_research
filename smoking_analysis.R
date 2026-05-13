@@ -1,4 +1,3 @@
-
 # Effect of Smoking status on Lung Cancer and MI
 
 # Dataset: smoking_data.csv (n = 500) 
@@ -42,7 +41,7 @@ print(colSums(is.na(dataframe)))
 
 if ("No" %in% dataframe$lung_cancer)  # runs the code inside, if the condition is True. It checks the "No" values
   
-  {
+{
   dataframe$lung_cancer[dataframe$lung_cancer == "No"] <- "1"
 }
 dataframe$lung_cancer <- as.integer(dataframe$lung_cancer)
@@ -93,6 +92,7 @@ dataframe$mi <- factor(dataframe$mi, levels = c(1, 2), labels = c("No", "Yes"))
 
 
 str(dataframe)
+
 
 
 
@@ -201,7 +201,7 @@ dev.off()
 
 
 # Counts of MI cases
-png("task1_mi.png", width = 600, height = 500)
+png("mi.png", width = 600, height = 500)
 barplot(
   table(dataframe$mi),
   main = "Myocardial Infarction (MI) Cases",
@@ -320,52 +320,106 @@ cat("\nHypothesis testing\n")
 
 # Test 1: Smoking Ever x MI
 crosstab1 <- table(dataframe$smoking_ever, dataframe$mi)  # chi-square uses cross-tabs
-chi_result <- suppressWarnings(chisq.test(crosstab1))     # outputs an object containing the results
 
-cat("\nSmoking Ever x MI\n")
+cat("\nSmoking Status x MI\n")
 cat("H0: No association | H1: Association exists\n")
 
-cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",            # printing the values by a formatting template
-            chi_result$statistic, chi_result$parameter, 
-            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+if (any(crosstab1 < 5)) {
+  fisher_result <- fisher.test(crosstab1)
+  cat("Primary test: Fisher's Exact Test\n")
+  cat(sprintf("Exact p-value = %s\n",
+              format(fisher_result$p.value, digits = 4, scientific = TRUE)))
+  cat("Fisher's Exact Test does not have chi-square degrees of freedom.\n")
+  cat(sprintf("Fisher OR = %.3f | 95%% CI: %.3f %.3f\n",
+              fisher_result$estimate,
+              fisher_result$conf.int[1],
+              fisher_result$conf.int[2]))
+} else {
+  chi_result <- suppressWarnings(chisq.test(crosstab1))
+  cat("Primary test: Pearson chi-square\n")
+  cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",
+              chi_result$statistic,
+              chi_result$parameter,
+              format(chi_result$p.value, digits = 4, scientific = TRUE)))
+}
 
 
 # Degrees of freedom (df): Defines which value of Chi-square is significant; selects which test distribution to use
-# df=(rows???1)??(columns???1)  from the cross-tab
+# df=(rows - 1)x(columns - 1)  from the cross-tab
 
 
 
 
 # Test 2: Smoking Ever x Lung Cancer
 crosstab2 <- table(dataframe$smoking_ever, dataframe$lung_cancer)
-chi_result <- suppressWarnings(chisq.test(crosstab2))
-cat("\nSmoking Ever x Lung Cancer\n")
+
+cat("\nSmoking Status x Lung Cancer\n")
 cat("H0: No association | H1: Association exists\n")
-cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
-            chi_result$statistic, chi_result$parameter, 
-            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+if (any(crosstab2 < 5)) {
+  fisher_result <- fisher.test(crosstab2)
+  cat("Primary test: Fisher's Exact Test\n")
+  cat(sprintf("Exact p-value = %s\n",
+              format(fisher_result$p.value, digits = 4, scientific = TRUE)))
+  cat("Fisher's Exact Test does not have chi-square degrees of freedom.\n")
+  cat(sprintf("Fisher OR = %.3f | 95%% CI: %.3f %.3f\n",
+              fisher_result$estimate,
+              fisher_result$conf.int[1],
+              fisher_result$conf.int[2]))
+} else {
+  chi_result <- suppressWarnings(chisq.test(crosstab2))
+  cat("Primary test: Pearson chi-square\n")
+  cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",
+              chi_result$statistic,
+              chi_result$parameter,
+              format(chi_result$p.value, digits = 4, scientific = TRUE)))
+}
 
 
 
 # Test 3: Smoking Duration x MI
 crosstab3 <- table(dataframe$smoking_duration, dataframe$mi)
-chi_result <- suppressWarnings(chisq.test(crosstab3))
+
 cat("\nSmoking Duration x MI\n")
 cat("H0: No association | H1: Association exists\n")
-cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
-            chi_result$statistic, chi_result$parameter, 
-            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+if (any(crosstab3 < 5)) {
+  fisher_result <- fisher.test(crosstab3)
+  cat("Primary test: Fisher's Exact Test\n")
+  cat(sprintf("Exact p-value = %s\n",
+              format(fisher_result$p.value, digits = 4, scientific = TRUE)))
+  cat("Fisher's Exact Test does not have chi-square degrees of freedom.\n")
+} else {
+  chi_result <- suppressWarnings(chisq.test(crosstab3))
+  cat("Primary test: Pearson chi-square\n")
+  cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",
+              chi_result$statistic,
+              chi_result$parameter,
+              format(chi_result$p.value, digits = 4, scientific = TRUE)))
+}
 
 
 
 # Test 4: Smoking Duration x Lung Cancer
 crosstab4 <- table(dataframe$smoking_duration, dataframe$lung_cancer)
-chi_result <- suppressWarnings(chisq.test(crosstab4))
+
 cat("\nSmoking Duration x Lung Cancer\n")
 cat("H0: No association | H1: Association exists\n")
-cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n", 
-            chi_result$statistic, chi_result$parameter, 
-            format(chi_result$p.value, digits = 4, scientific = FALSE)))
+
+if (any(crosstab4 < 5)) {
+  fisher_result <- fisher.test(crosstab4)
+  cat("Primary test: Fisher's Exact Test\n")
+  cat(sprintf("Exact p-value = %s\n",
+              format(fisher_result$p.value, digits = 4, scientific = TRUE)))
+  cat("Fisher's Exact Test does not have chi-square degrees of freedom.\n")
+} else {
+  chi_result <- suppressWarnings(chisq.test(crosstab4))
+  cat("Primary test: Pearson chi-square\n")
+  cat(sprintf("Chi^2 = %.3f, df = %d, p = %s\n",
+              chi_result$statistic,
+              chi_result$parameter,
+              format(chi_result$p.value, digits = 4, scientific = TRUE)))
+}
 
 
 
@@ -379,7 +433,7 @@ cat("\nTask 4: Logistic regression\n")
 dataframe$age_10 <- dataframe$age / 10
 
 # Unordered copy of smoking_duration with "Never" as reference level
-# ??? glm() will create one beta per level vs Never (interpretable ORs)
+# glm() will create one beta per level vs Never (interpretable ORs)
 # Original smoking_duration stays ordered for trend tests
 dataframe$smoking_duration_not_ordinal <- factor(dataframe$smoking_duration, ordered = FALSE)
 dataframe$smoking_duration_not_ordinal  <- relevel(dataframe$smoking_duration_not_ordinal, ref = "Never")
@@ -387,161 +441,303 @@ dataframe$smoking_duration_not_ordinal  <- relevel(dataframe$smoking_duration_no
 
 
 
-# ?????? Single-factor models (unadjusted)
+# Single-factor models (unadjusted)
 
 
 
 # Model 1: Smoking Ever -> MI 
-# Binary predictor: Ever vs Never; single beta ??? single OR
+# Binary predictor: Ever vs Never
 model_mi_smoking_ever <- glm(mi ~ smoking_ever, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_smoking_ever))
+model_ci <- suppressMessages(confint(model_mi_smoking_ever))
 
-cat("\nModel 1: Smoking Ever -> MI\n")
-cat("OR for 'Ever' vs 'Never':",
-    round(exp(coef(model_mi_smoking_ever)["smoking_everEver"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_mi_smoking_ever))["smoking_everEver", ]), 3), "\n")
+cat("\nModel 1: Smoking Status -> MI\n")
+output_table <- data.frame(
+  Term = c("Smoking Status: Ever vs Never"),
+  OR = round(exp(model_summary["smoking_everEver", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["smoking_everEver", 1]), 3),
+  CI_high = round(exp(model_ci["smoking_everEver", 2]), 3),
+  p_value = format(model_summary["smoking_everEver", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 2: Smoking Ever -> Lung Cancer 
 model_lc_smoking_ever <- glm(lung_cancer ~ smoking_ever, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_smoking_ever))
+model_ci <- suppressMessages(confint(model_lc_smoking_ever))
 
-cat("\nModel 2: Smoking Ever -> Lung Cancer\n")
-cat("OR for 'Ever' vs 'Never':",
-    round(exp(coef(model_lc_smoking_ever)["smoking_everEver"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_lc_smoking_ever))["smoking_everEver", ]), 3), "\n")
+cat("\nModel 2: Smoking Status -> Lung Cancer\n")
+output_table <- data.frame(
+  Term = c("Smoking Status: Ever vs Never"),
+  OR = round(exp(model_summary["smoking_everEver", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["smoking_everEver", 1]), 3),
+  CI_high = round(exp(model_ci["smoking_everEver", 2]), 3),
+  p_value = format(model_summary["smoking_everEver", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 3: Smoking Duration -> MI 
 
 
-# 3a: Unordered factor ??? one OR per level vs Never
+# 3a: Unordered factor (one OR per level)
 model_mi_dur_cat <- glm(mi ~ smoking_duration_not_ordinal, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_dur_cat))
+model_ci <- suppressMessages(confint(model_mi_dur_cat))
 
-cat("\nModel 3a: Smoking Duration -> MI (categorical ORs vs Never)\n")
+cat("\nModel 3a: Smoking Duration -> MI (unordered categories vs Never)\n")
+output_table <- data.frame(
+  Term = c(
+    "Smoking Duration: LessThan1yr vs Never",
+    "Smoking Duration: 2to5yrs vs Never",
+    "Smoking Duration: MoreThan5yrs vs Never"
+  ),
+  OR = round(exp(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), 1]), 3),
+  CI_high = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), 2]), 3),
+  p_value = format(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
-# Build table, then strip the variable name prefix R adds to row names
-or_table <- round(exp(cbind(OR = coef(model_mi_dur_cat),
-                            suppressMessages(confint(model_mi_dur_cat)))), 3)
-rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
-print(or_table)
 
-
-# 3b: Ordered factor ??? .L coefficient = linear trend across ordered levels
+# 3b: Ordered factors with ".L" coefficient. Linear trend across the ordered levels
 model_mi_dur_ord <- glm(mi ~ smoking_duration, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_dur_ord))
+model_ci <- suppressMessages(confint(model_mi_dur_ord))
 
-cat("\nModel 3b: Smoking Duration -> MI (linear trend / dose-response)\n")
-trend_mi_dur <- coef(summary(model_mi_dur_ord))["smoking_duration.L", ]
-cat("Linear trend OR:", round(exp(trend_mi_dur["Estimate"]), 3),
-    "| p-value:", formatC(trend_mi_dur["Pr(>|z|)"], format = "f", digits = 4), "\n")
+cat("\nModel 3b: Smoking Duration -> MI (ordered linear trend)\n")
+output_table <- data.frame(
+  Term = c("Smoking Duration: Linear trend (.L)"),
+  OR = round(exp(model_summary["smoking_duration.L", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["smoking_duration.L", 1]), 3),
+  CI_high = round(exp(model_ci["smoking_duration.L", 2]), 3),
+  p_value = format(model_summary["smoking_duration.L", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 4: Smoking Duration -> Lung Cancer 
 
-# 4a: Unordered factor ??? one OR per level vs Never
+# 4a: Unordered factor 
 model_lc_dur_cat <- glm(lung_cancer ~ smoking_duration_not_ordinal, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_dur_cat))
+model_ci <- suppressMessages(confint(model_lc_dur_cat))
 
-cat("\nModel 4a: Smoking Duration -> Lung Cancer (categorical ORs vs Never)\n")
-or_table <- round(exp(cbind(OR = coef(model_lc_dur_cat),
-                            suppressMessages(confint(model_lc_dur_cat)))), 3)
-rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
-print(or_table)
+cat("\nModel 4a: Smoking Duration -> Lung Cancer (unordered categories vs Never)\n")
+output_table <- data.frame(
+  Term = c(
+    "Smoking Duration: LessThan1yr vs Never",
+    "Smoking Duration: 2to5yrs vs Never",
+    "Smoking Duration: MoreThan5yrs vs Never"
+  ),
+  OR = round(exp(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), 1]), 3),
+  CI_high = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), 2]), 3),
+  p_value = format(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs"
+  ), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
-# 4b: Ordered factor ??? linear trend test
+# 4b: Ordered factor: linear trend test
 model_lc_dur_ord <- glm(lung_cancer ~ smoking_duration, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_dur_ord))
+model_ci <- suppressMessages(confint(model_lc_dur_ord))
 
-cat("\nModel 4b: Smoking Duration -> Lung Cancer (linear trend / dose-response)\n")
-trend_lc_dur <- coef(summary(model_lc_dur_ord))["smoking_duration.L", ]
-cat("Linear trend OR:", round(exp(trend_lc_dur["Estimate"]), 3),
-    "| p-value:", formatC(trend_lc_dur["Pr(>|z|)"], format = "f", digits = 4), "\n")
+cat("\nModel 4b: Smoking Duration -> Lung Cancer (ordered linear trend)\n")
+output_table <- data.frame(
+  Term = c("Smoking Duration: Linear trend (.L)"),
+  OR = round(exp(model_summary["smoking_duration.L", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["smoking_duration.L", 1]), 3),
+  CI_high = round(exp(model_ci["smoking_duration.L", 2]), 3),
+  p_value = format(model_summary["smoking_duration.L", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 5: Age -> MI 
 # Continuous predictor; OR = multiplicative change in MI odds per 10 years
 model_mi_age <- glm(mi ~ age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_age))
+model_ci <- suppressMessages(confint(model_mi_age))
 
 cat("\nModel 5: Age -> MI\n")
-cat("OR per 10-year increase:",
-    round(exp(coef(model_mi_age)["age_10"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_mi_age))["age_10", ]), 3), "\n")
+output_table <- data.frame(
+  Term = c("Age: per 10-year increase"),
+  OR = round(exp(model_summary["age_10", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["age_10", 1]), 3),
+  CI_high = round(exp(model_ci["age_10", 2]), 3),
+  p_value = format(model_summary["age_10", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 6: Age -> Lung Cancer 
 model_lc_age <- glm(lung_cancer ~ age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_age))
+model_ci <- suppressMessages(confint(model_lc_age))
 
 cat("\nModel 6: Age -> Lung Cancer\n")
-cat("OR per 10-year increase:",
-    round(exp(coef(model_lc_age)["age_10"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_lc_age))["age_10", ]), 3), "\n")
+output_table <- data.frame(
+  Term = c("Age: per 10-year increase"),
+  OR = round(exp(model_summary["age_10", "Estimate"]), 3),
+  CI_low = round(exp(model_ci["age_10", 1]), 3),
+  CI_high = round(exp(model_ci["age_10", 2]), 3),
+  p_value = format(model_summary["age_10", "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 
 
-# ?????? Age-adjusted models ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+# Age-adjusted models 
 
-# Adding age_10 to isolate each predictor's independent effect
+# Adding age (age_10) to compare each predictor's independent effect
 
 
 
 # Model 7: Smoking Ever + Age -> MI 
 model_mi_ever_adj <- glm(mi ~ smoking_ever + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_ever_adj))
+model_ci <- suppressMessages(confint(model_mi_ever_adj))
 
-cat("\nModel 7: Smoking Ever + Age -> MI (age-adjusted)\n")
-cat("OR for 'Ever' vs 'Never' (adj. for age):",
-    round(exp(coef(model_mi_ever_adj)["smoking_everEver"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_mi_ever_adj))["smoking_everEver", ]), 3), "\n")
-cat("OR per 10-year age increase (adj. for smoking):",
-    round(exp(coef(model_mi_ever_adj)["age_10"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_mi_ever_adj))["age_10", ]), 3), "\n")
+cat("\nModel 7: Smoking Status + Age -> MI (age-adjusted)\n")
+output_table <- data.frame(
+  Term = c("Smoking Status: Ever vs Never", "Age: per 10-year increase"),
+  OR = round(exp(model_summary[c("smoking_everEver", "age_10"), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c("smoking_everEver", "age_10"), 1]), 3),
+  CI_high = round(exp(model_ci[c("smoking_everEver", "age_10"), 2]), 3),
+  p_value = format(model_summary[c("smoking_everEver", "age_10"), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 8: Smoking Ever + Age -> Lung Cancer 
 model_lc_ever_adj <- glm(lung_cancer ~ smoking_ever + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_ever_adj))
+model_ci <- suppressMessages(confint(model_lc_ever_adj))
 
-cat("\nModel 8: Smoking Ever + Age -> Lung Cancer (age-adjusted)\n")
-cat("OR for 'Ever' vs 'Never' (adj. for age):",
-    round(exp(coef(model_lc_ever_adj)["smoking_everEver"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_lc_ever_adj))["smoking_everEver", ]), 3), "\n")
-cat("OR per 10-year age increase (adj. for smoking):",
-    round(exp(coef(model_lc_ever_adj)["age_10"]), 3),
-    "| 95% CI:",
-    round(exp(suppressMessages(confint(model_lc_ever_adj))["age_10", ]), 3), "\n")
+cat("\nModel 8: Smoking Status + Age -> Lung Cancer (age-adjusted)\n")
+output_table <- data.frame(
+  Term = c("Smoking Status: Ever vs Never", "Age: per 10-year increase"),
+  OR = round(exp(model_summary[c("smoking_everEver", "age_10"), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c("smoking_everEver", "age_10"), 1]), 3),
+  CI_high = round(exp(model_ci[c("smoking_everEver", "age_10"), 2]), 3),
+  p_value = format(model_summary[c("smoking_everEver", "age_10"), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
 # Model 9: Smoking Duration + Age -> MI 
 
 
-# 9a: Unordered ??? per-level ORs vs Never, with age held constant
+# 9a: Unordered, with age held constant
 model_mi_dur_adj_cat <- glm(mi ~ smoking_duration_not_ordinal + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_dur_adj_cat))
+model_ci <- suppressMessages(confint(model_mi_dur_adj_cat))
 
-cat("\nModel 9a: Smoking Duration + Age -> MI (categorical ORs, age-adjusted)\n")
-or_table <- round(exp(cbind(OR = coef(model_mi_dur_adj_cat),
-                            suppressMessages(confint(model_mi_dur_adj_cat)))), 3)
-rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
-print(or_table)
+cat("\nModel 9a: Smoking Duration + Age -> MI (unordered categories, age-adjusted)\n")
+output_table <- data.frame(
+  Term = c(
+    "Smoking Duration: LessThan1yr vs Never",
+    "Smoking Duration: 2to5yrs vs Never",
+    "Smoking Duration: MoreThan5yrs vs Never",
+    "Age: per 10-year increase"
+  ),
+  OR = round(exp(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), 1]), 3),
+  CI_high = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), 2]), 3),
+  p_value = format(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
-# 9b: Ordered ??? linear trend test with age held constant
+# 9b: Ordered, linear trend test with age held constant
 model_mi_dur_adj_ord <- glm(mi ~ smoking_duration + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_mi_dur_adj_ord))
+model_ci <- suppressMessages(confint(model_mi_dur_adj_ord))
 
-cat("\nModel 9b: Smoking Duration + Age -> MI (trend test, age-adjusted)\n")
-trend_mi_dur_adj <- coef(summary(model_mi_dur_adj_ord))["smoking_duration.L", ]
-cat("Linear trend OR:", round(exp(trend_mi_dur_adj["Estimate"]), 3),
-    "| p-value:", formatC(trend_mi_dur_adj["Pr(>|z|)"], format = "f", digits = 4), "\n")
+cat("\nModel 9b: Smoking Duration + Age -> MI (ordered linear trend, age-adjusted)\n")
+output_table <- data.frame(
+  Term = c("Smoking Duration: Linear trend (.L)", "Age: per 10-year increase"),
+  OR = round(exp(model_summary[c("smoking_duration.L", "age_10"), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c("smoking_duration.L", "age_10"), 1]), 3),
+  CI_high = round(exp(model_ci[c("smoking_duration.L", "age_10"), 2]), 3),
+  p_value = format(model_summary[c("smoking_duration.L", "age_10"), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
@@ -549,23 +745,63 @@ cat("Linear trend OR:", round(exp(trend_mi_dur_adj["Estimate"]), 3),
 # Model 10: Smoking Duration + Age -> Lung Cancer
 
 
-# 10a: Unordered ??? per-level ORs vs Never, with age held constant
+# 10a: Unordered, with age held constant
 model_lc_dur_adj_cat <- glm(lung_cancer ~ smoking_duration_not_ordinal + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_dur_adj_cat))
+model_ci <- suppressMessages(confint(model_lc_dur_adj_cat))
 
-cat("\nModel 10a: Smoking Duration + Age -> Lung Cancer (categorical ORs, age-adjusted)\n")
-or_table <- round(exp(cbind(OR = coef(model_lc_dur_adj_cat),
-                            suppressMessages(confint(model_lc_dur_adj_cat)))), 3)
-rownames(or_table) <- gsub("smoking_duration_not_ordinal", "Duration: ", rownames(or_table))
-print(or_table)
+cat("\nModel 10a: Smoking Duration + Age -> Lung Cancer (unordered categories, age-adjusted)\n")
+output_table <- data.frame(
+  Term = c(
+    "Smoking Duration: LessThan1yr vs Never",
+    "Smoking Duration: 2to5yrs vs Never",
+    "Smoking Duration: MoreThan5yrs vs Never",
+    "Age: per 10-year increase"
+  ),
+  OR = round(exp(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), 1]), 3),
+  CI_high = round(exp(model_ci[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), 2]), 3),
+  p_value = format(model_summary[c(
+    "smoking_duration_not_ordinalLessThan1yr",
+    "smoking_duration_not_ordinal2to5yrs",
+    "smoking_duration_not_ordinalMoreThan5yrs",
+    "age_10"
+  ), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
-# 10b: Ordered ??? linear trend test with age held constant
+# 10b: Ordered, linear trend test with age held constant
 model_lc_dur_adj_ord <- glm(lung_cancer ~ smoking_duration + age_10, data = dataframe, family = binomial)
+model_summary <- coef(summary(model_lc_dur_adj_ord))
+model_ci <- suppressMessages(confint(model_lc_dur_adj_ord))
 
-cat("\nModel 10b: Smoking Duration + Age -> Lung Cancer (trend test, age-adjusted)\n")
-trend_lc_dur_adj <- coef(summary(model_lc_dur_adj_ord))["smoking_duration.L", ]
-cat("Linear trend OR:", round(exp(trend_lc_dur_adj["Estimate"]), 3),
-    "| p-value:", formatC(trend_lc_dur_adj["Pr(>|z|)"], format = "f", digits = 4), "\n")
+cat("\nModel 10b: Smoking Duration + Age -> Lung Cancer (ordered linear trend, age-adjusted)\n")
+output_table <- data.frame(
+  Term = c("Smoking Duration: Linear trend (.L)", "Age: per 10-year increase"),
+  OR = round(exp(model_summary[c("smoking_duration.L", "age_10"), "Estimate"]), 3),
+  CI_low = round(exp(model_ci[c("smoking_duration.L", "age_10"), 1]), 3),
+  CI_high = round(exp(model_ci[c("smoking_duration.L", "age_10"), 2]), 3),
+  p_value = format(model_summary[c("smoking_duration.L", "age_10"), "Pr(>|z|)"], digits = 4, scientific = TRUE),
+  check.names = FALSE
+)
+print(output_table, row.names = FALSE)
 
 
 
